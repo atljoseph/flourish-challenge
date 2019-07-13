@@ -1,6 +1,8 @@
 # Flourish Challenge
 
-Want to be able to run `npm start` here to kick off `db` and then `api`, and `npm stop` to stop everything.
+- Start MySQL - `cd ./db` and run `npm start` (`npm stop` to stop)
+- Start API - `cd ./api` and run `npm start` (`Ctrl + C` to stop)
+- As soon as the API boots up, the Database is Migrated and Seeded.
 
 # Done
 
@@ -9,16 +11,21 @@ Want to be able to run `npm start` here to kick off `db` and then `api`, and `np
 - use typscript
 - query db from api
 - db server setup sql
+- run db migration on startup
+- run setup sql on initial run
+- script to kick off migration & data etl process
 
 # Todo
 
-- start everything from `npm start`, with `npm stop`
-- run setup sql on initial run
-- run db migrations on startup
-- create routes
-- route to kick of data etl process
-- route to get list of data in db
-- tests project
+- create db schema
+- create etl data insert
+- create routes for get
+- create routes for insert
+- create routes for update
+- add params to get for searching
+
+- tests project ?
+- make migration command read all files in migration folder, in order
 - environment configuration via json file
 - nodemon? / pm2? for multithreading
 - in-code documentation

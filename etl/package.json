@@ -1,5 +1,5 @@
 {
-  "name": "api",
+  "name": "etl",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -10,20 +10,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "compression": "^1.7.4",
     "config": "^3.2.0",
-    "cors": "^2.8.5",
-    "express": "^4.17.1",
     "fs-extra": "^8.1.0",
-    "helmet": "^3.18.0",
-    "mysql": "^2.17.1",
-    "winston": "^3.2.1"
+    "mysql": "^2.17.1"
   },
   "devDependencies": {
     "@types/config": "0.0.34",
     "@types/fs-extra": "^8.0.0",
     "@types/mysql": "^2.15.6",
-    "@types/node": "^12.6.2",
     "ts-node": "^8.3.0",
     "typescript": "^3.5.3"
   }
