@@ -1,0 +1,26 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile": "rm -rf dist && tsc -outDir dist",
+    "start": "npm run compile && node dist/"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "helmet": "^3.18.0",
+    "mysql": "^2.17.1",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/mysql": "^2.15.6",
+    "@types/node": "^12.6.2",
+    "ts-node": "^8.3.0",
+    "typescript": "^3.5.3"
+  }
+}

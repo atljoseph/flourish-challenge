@@ -1,0 +1,12 @@
+{
+  "name": "db",
+  "version": "1.0.0",
+  "description": "``` docker build -t flourish-mysql:latest . docker run --name flourish-mysql --publish 3306:3306 -d --rm flourish-mysql:latest docker container kill flourish-mysql ```",
+  "main": "index.js",
+  "scripts": {
+    "start": "sh ./docker-build-run.sh",
+    "stop": "sh ./docker-kill.sh"
+  },
+  "author": "",
+  "license": "ISC"
+}
