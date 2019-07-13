@@ -1,8 +1,8 @@
 # Flourish Challenge
 
 - Start MySQL - `cd ./db` and run `npm start` (`npm stop` to stop)
+- Migrate & Seed MySQL - `cd ./etl` and run `npm start`
 - Start API - `cd ./api` and run `npm start` (`Ctrl + C` to stop)
-- As soon as the API boots up, the Database is Migrated and Seeded.
 
 # Done
 
