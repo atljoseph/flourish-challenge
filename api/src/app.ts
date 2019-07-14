@@ -1,6 +1,4 @@
 
-// import * as path from 'path'; 
-
 import * as express from 'express';  
 import * as helmet from 'helmet';  
 import * as cors from 'cors';  
@@ -16,6 +14,9 @@ app.use(cors());
 app.use(compression());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(requestLoggerMiddleware);
+
+// middlewares
+const globalMiddleWare = [requestLoggerMiddleware];
+app.use(globalMiddleWare);
 
 export default app;

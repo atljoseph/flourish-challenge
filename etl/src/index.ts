@@ -1,7 +1,9 @@
 
-import { migrateDatabase, seedDatabase } from './data';
+import { migrateDatabase } from './database-migrate';
+import { seedDatabase } from './database-seed';
+import * as path from 'path';
 
 (async () => {
-    await migrateDatabase();
+    await migrateDatabase(path.resolve(__dirname, '../migrations'));
     await seedDatabase();
 })();

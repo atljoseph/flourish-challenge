@@ -1,8 +1,12 @@
 # Flourish Challenge
 
-- Start MySQL - `cd ./db` and run `npm start` (`npm stop` to stop)
-- Migrate & Seed MySQL - `cd ./etl` and run `npm start`
-- Start API - `cd ./api` and run `npm start` (`Ctrl + C` to stop)
+- Navigate to project root - `cd [repo_root]`
+- Start MySQL Container - `npm run db`
+- Confirm DB Server & Database - `npm run dbTest`
+- Build Shared Lib - `npm run lib`
+- Migrate & Seed MySQL - `npm run etl`
+- Start API - `npm run api`
+
 
 # Done
 
@@ -14,15 +18,18 @@
 - run db migration on startup
 - run setup sql on initial run
 - script to kick off migration & data etl process
+- use shared typescript lib
+- improve project structure / scripting
 
 # Todo
 
-- create db schema
+- create db storage schema
 - create etl data insert
-- create routes for get
-- create routes for insert
-- create routes for update
-- add params to get for searching
+- create routes / business for get
+- create routes / business for insert
+- create routes / business for update
+- add query param middleware?
+- add params to get for searching / update get business
 
 - tests project ?
 - make migration command read all files in migration folder, in order

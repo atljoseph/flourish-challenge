@@ -1,0 +1,15 @@
+{
+  "name": "flourish-challenge",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lib": "cd lib && npm run build",
+    "etl": "cd etl && npm run start",
+    "api": "cd api && npm run start",
+    "db": "cd db && npm run stop && npm run start",
+    "dbTest": "cd db && npm run dbList"
+  },
+  "author": "",
+  "license": "ISC"
+}

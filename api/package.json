@@ -2,10 +2,10 @@
   "name": "api",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
-    "compile": "rm -rf dist && tsc -outDir dist",
-    "start": "npm run compile && node dist/"
+    "build": "rm -rf dist && tsc",
+    "start": "npm run build && node dist/"
   },
   "author": "",
   "license": "ISC",
