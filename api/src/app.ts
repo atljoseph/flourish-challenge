@@ -4,7 +4,8 @@ import * as helmet from 'helmet';
 import * as cors from 'cors';  
 import * as compression from 'compression';  
 
-import { requestLoggerMiddleware } from './middleware';
+import { requestLoggerMiddleware, allowCorsMiddleware } from './middleware';
+import { applyRoutes } from './routes';
 
 const app = express();
 
@@ -16,7 +17,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // middlewares
-const globalMiddleWare = [requestLoggerMiddleware];
+const globalMiddleWare = [allowCorsMiddleware, requestLoggerMiddleware];
 app.use(globalMiddleWare);
+
+// routes
+applyRoutes(app);
 
 export default app;

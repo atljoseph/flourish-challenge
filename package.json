@@ -5,11 +5,14 @@
   "main": "index.js",
   "scripts": {
     "lib": "cd lib && npm run build",
-    "etl": "cd etl && npm run start",
-    "api": "cd api && npm run start",
+    "etl": "npm run db && npm run lib && cd etl && npm run start",
+    "api": "npm run lib && cd api && npm run start",
     "db": "cd db && npm run stop && npm run start",
     "dbTest": "cd db && npm run dbList"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "util": "^0.12.1"
+  }
 }

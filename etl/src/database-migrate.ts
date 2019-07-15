@@ -1,15 +1,48 @@
 
-import { database, DatabaseConfig } from 'lib';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as config from 'config';
 
-export const migrateDatabase = async (folderPath: string) => {
-    const db_config = <DatabaseConfig>config.get('database');
-    console.log(db_config);
-    // add a dynamic folder load action here instead of one-offs
-    const filePath = path.resolve(folderPath, './01.CreateTestTable.sql');
-    console.log(filePath);
-    let sql = await fs.readFile(filePath, { encoding: 'utf8' });
-    await database.nonQuery(sql, db_config);//.replace(/(\r\n|\n|\r)/gm, ""));
+import { database, DatabaseConfig } from 'lib';
+import { asyncForEach } from 'lib';
+const migration = { ...<DatabaseMigrationConfig>config.get('migration') };
+const db_config = <DatabaseConfig>config.get('database');
+
+export const migrateDatabase = async () => {
+    console.log('//////////////////////////////////');
+    console.log('MIGRATE DATABASE');
+    console.log(migration);
+    console.log('//////////////////////////////////');
+    const files = getDatabaseMigration();
+    await asyncForEach(files, async (migration) => {
+        console.log(`MIGRATION START ${migration.filePath}`);
+        if (migration.sql) await database.nonQuery(db_config, migration.sql);
+        console.log(`MIGRATION DONE ${migration.filePath}`);
+    });
 };
+
+interface DatabaseMigrationConfig {
+    rootDirectory: string;
+    files: string[];
+}
+
+interface DatabaseMigration {
+    filePath: string;
+    sql: string;
+}
+
+const getDatabaseMigration = (): DatabaseMigration[] => {
+    migration.rootDirectory = path.resolve(migration.rootDirectory || 'migrations');
+    const migrationFiles: DatabaseMigration[] = [];
+    // will fail here if file not found
+    (migration.files || []).forEach((migrationFile) => {
+        const filePath = path.join(migration.rootDirectory, migrationFile);
+        console.log(`READING SQL FILE ${filePath}`);
+        const sql = fs.readFileSync(filePath, { encoding: 'utf8' });
+        // console.log(sql);
+        migrationFiles.push(<DatabaseMigration>{
+            filePath, sql: sql.trim()
+        });
+    });
+    return migrationFiles;
+}

@@ -3,7 +3,7 @@ import * as config from 'config';
 
 import app from './app';
 
-const port = config.get('api_port');
+const port = config.get('api.port');
 const server = app.listen(port);
 
 process.on('unhandledRejection', (reason, p) => {

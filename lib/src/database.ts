@@ -1,17 +1,24 @@
 
 import * as mysql from 'mysql';
+import * as util from 'util';
 
-export type DatabaseConfig = mysql.ConnectionConfig;
+export type DatabaseConfig = mysql.PoolConfig;
 
 class Database {
-    connect({ host, user, password, database}: DatabaseConfig): mysql.Connection {
+    private _connectionPool: any = null;
+    private _connect({ host, user, password, database, connectionLimit }: DatabaseConfig) {
         try {
-            return mysql.createConnection({
-                host,
-                user,
-                password,
-                database
-            });
+            if (!this._connectionPool) {
+                this._connectionPool = mysql.createPool({
+                    host,
+                    user,
+                    password,
+                    database,
+                    connectionLimit: connectionLimit || 1,
+                    multipleStatements: true
+                });
+                // this._connectionPool.query = util.promisify(this._connectionPool.query)
+            }
         }
         catch (err) {
             console.log('ERROR - Getting MySql Connection');
@@ -19,35 +26,43 @@ class Database {
             throw err;
         }
     }
-    async query(statement: string, config: DatabaseConfig): Promise<any[]> {
-        return new Promise<any[]>((resolve, reject) => {
-            const connection = this.connect(config);
-            connection.query(statement, function (err, rows, fields) {
+    async query(config: DatabaseConfig, statement: string, values: any[] = []): Promise<any[]> {
+        return new Promise<any[]>(async (resolve, reject) => {
+            this._connect(config);
+            const ticks = Date.now();
+            console.log('DB START', ticks);
+            const charLimit = 400;
+            console.log(statement.substr(0, charLimit) + (statement.length > charLimit - 1 ? ' ... ' : ''));
+            await this._connectionPool.query(statement, values, function (err, rows, fields) {
                 if (err) {
-                    console.log(`ERROR - Running MySql Query against '${database}' - ${statement}`);
-                    console.error(err);
-                    throw err;
-                    // reject([]);
-                };
-                console.log(`SUCCESS - ${statement}`);
-                console.log(rows);
-                connection.end();
-                resolve(rows);
+                    console.log('DB ERROR', ticks);
+                    reject(err);
+                }
+                else {
+                    console.log(rows);
+                    console.log('DB SUCCESS', ticks);
+                    resolve(rows);
+                }
             });
         });
     }
-    async nonQuery(statement: string, config: DatabaseConfig) {
-        return new Promise((resolve, reject) => {
-            const connection = this.connect(config);
-            connection.query(statement, function (err, rows, fields) {
+    async nonQuery(config: DatabaseConfig, statement: string, values: any[] = []) {
+        return new Promise(async (resolve, reject) => {
+            this._connect(config);
+            const ticks = Date.now();
+            console.log('DB START', ticks);
+            const charLimit = 400;
+            console.log(statement.substr(0, charLimit) + (statement.length > charLimit - 1 ? ' ... ' : ''));
+            await this._connectionPool.query(statement, values, function (err, rows, fields) {
                 if (err) {
-                    console.log(`ERROR - Running MySql Query against '${database}' - ${statement}`);
+                    console.log('DB ERROR', ticks);
                     console.error(err);
                     reject(err);
-                };
-                resolve();
-                console.log(`SUCCESS - ${statement}`);
-                connection.end();
+                }
+                else {
+                    console.log('DB SUCCESS', ticks);
+                    resolve();
+                }
             });
         });
     }

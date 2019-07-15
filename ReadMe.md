@@ -20,11 +20,14 @@
 - script to kick off migration & data etl process
 - use shared typescript lib
 - improve project structure / scripting
+- create test route and request logging middleware
+- create db storage schema & run
+- delegate migration list to config and allow multiple migration files
+- download / install mysql workbench
+- create etl data insert
 
 # Todo
 
-- create db storage schema
-- create etl data insert
 - create routes / business for get
 - create routes / business for insert
 - create routes / business for update
