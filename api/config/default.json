@@ -2,22 +2,26 @@
     "api": {
         "port": 8888
     },
-    "database": {
-        "host": "localhost",
-        "user": "root",
-        "password": "password",
-        "database": "test",
-        "connectionLimit": 1
+    "databases": {
+        "strainsDb": {
+            "host": "localhost",
+            "user": "root",
+            "password": "password",
+            "database": "test",
+            "connectionLimit": 10
+        }
     },
-    "migration": {
-        "rootDirectory": "migrations",
-        "files": [
-            "01.CreateTestTable.sql",
-            "02.CreateTable.StrainRace.sql",
-            "03.CreateTable.Strain.sql",
-            "04.CreateTable.StrainFlavor.sql",
-            "05.CreateTable.StrainEffectType.sql",
-            "06.CreateTable.StrainEffect.sql"
-        ]
+    "migrations": {
+        "strainsDb": {
+            "rootDirectory": "migrations",
+            "files": [
+                "01.CreateTestTable.sql",
+                "02.CreateTable.StrainRace.sql",
+                "03.CreateTable.Strain.sql",
+                "04.CreateTable.StrainFlavor.sql",
+                "05.CreateTable.StrainEffectType.sql",
+                "06.CreateTable.StrainEffect.sql"
+            ]
+        }
     }
 }

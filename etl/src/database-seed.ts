@@ -3,93 +3,98 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as config from 'config';
 
-import { database, DatabaseConfig } from 'lib';
+import { MysqlDatabase, MysqlDatabaseConfig, StrainEntity, StrainFlavorEntity, StrainEffectEntity } from 'lib';
 import { asyncForEach } from 'lib';
 import { EtlStrain, EtlStrainEffects } from './etl-strain';
 import { StrainRaceEntity, StrainEffectTypeEntity } from 'lib';
-const db_config = <DatabaseConfig>config.get('database');
+import { StrainBusiness } from 'lib';
+
+const db_connection_name = 'strainsDb';
+const db_config = <MysqlDatabaseConfig>config.get(`databases.${db_connection_name}`);
+const db = new MysqlDatabase(db_config);
+const strainBusiness = new StrainBusiness(db_config);
 
 export const seedDatabase = async () => {
     console.log('//////////////////////////////////');
     console.log('SEED DATABASE');
     console.log('//////////////////////////////////');
+    const etlStrains = await getEtlStrainData();
+    const strainEntities = await mapEtlStrainsToStrainEntities(etlStrains);
+    // console.log(strainEntities);
+    await asyncForEach(strainEntities, async (strainEntity) => {
+        console.log(`ETL STRAIN - ${strainEntity.name}`);
+        await strainBusiness.createStrain(strainEntity, true);        
+    });
     // await insertTestData();
-    const races = await getStrainRaces();
-    const effectTypes = await getStrainEffectTypes();
-    await insertStrains(races, effectTypes);
 };
 
-const getStrainData = async (): Promise<EtlStrain[]> => {
+const getEtlStrainData = async (): Promise<EtlStrain[]> => {
     console.log('READ SEED FILE');
     const filePath = path.resolve('seed-data', 'strains.json');
-    const etlStrains = <EtlStrain[]> await fs.readJSON(filePath);
+    const etlStrains = <EtlStrain[]>await fs.readJSON(filePath);
     return etlStrains;
-}
-
-const getStrainRaces = async (): Promise<StrainRaceEntity[]> => {
-    console.log('GET RACES');
-    const races = <StrainRaceEntity[]> await database.query(db_config, 'select * from strain_race;');
-    // console.log(races);
-    return races;
-}
-
-const getStrainEffectTypes = async (): Promise<StrainEffectTypeEntity[]> => {
-    console.log('GET EFFECT TYPES');
-    const types = <StrainEffectTypeEntity[]> await database.query(db_config, 'select * from strain_effect_type;');
-    // console.log(types);
-    return types;
 }
 
 const insertTestData = async () => {
     console.log('INSERT TEST DATA');
-    await database.nonQuery(db_config, `insert into testy (test_name) values ('derka');`);
-    await database.nonQuery(db_config, `insert into testy (test_name) values ('derk');`);
-    await database.query(db_config, 'select * from testy;');
+    await db.insertQuery(`insert into testy (test_name) values ('derka');`);
+    await db.insertQuery(`insert into testy (test_name) values ('derk');`);
+    await db.query('select * from testy;');
 }
 
-const insertStrains = async (races: StrainRaceEntity, effectTypes: StrainEffectTypeEntity[]) => {
-    const strains = await getStrainData();
-    await asyncForEach(strains, async (strain) => {
-        const race = races.find((race) => {
-            return race.code.toLowerCase() === strain.race.toLowerCase();
-        });
-        await insertStrain(strain, race, effectTypes);
+const mapEtlStrainsToStrainEntities = async (etlStrains: EtlStrain[]): Promise<StrainEntity[]> => {
+    const strainEntities: StrainEntity[] = [];
+    const races = await strainBusiness.getStrainRaces();
+    const effectTypes = await strainBusiness.getStrainEffectTypes();
+    // await asyncForEach(etlStrains, async (etlStrain: EtlStrain) => {
+    etlStrains.forEach((etlStrain) => {
+        const race = races.find((race) => race.code.toLowerCase() === etlStrain.race.toLowerCase());
+        if (race) {
+            const entity = new StrainEntity();
+            entity.strain_id = etlStrain.id;
+            entity.name = etlStrain.name;
+            entity.race = race;
+            entity.race_id = race.race_id;
+            entity.flavors = (etlStrain.flavors || []).map((etlFavor) => {
+                const flavor = new StrainFlavorEntity();
+                flavor.label = etlFavor;
+                flavor.flavor_id = 0;
+                flavor.strain_id = etlStrain.id;
+                return flavor;
+            });
+            const effectTypePositive = effectTypes.find(effectType => effectType.code.toLowerCase() === ('positive').toLowerCase());
+            if (effectTypePositive) {
+                entity.effects = (etlStrain.effects.positive || []).map((etlEffect) => {
+                    const effect = new StrainEffectEntity();
+                    effect.label = etlEffect;
+                    effect.effect_id = 0;
+                    effect.effect_id = effectTypePositive.effect_type_id;
+                    return effect;
+                });
+            }
+            const effectTypeNegative = effectTypes.find(effectType => effectType.code.toLowerCase() === ('negative').toLowerCase());
+            if (effectTypeNegative) {
+                entity.effects = (etlStrain.effects.positive || []).map((etlEffect) => {
+                    const effect = new StrainEffectEntity();
+                    effect.label = etlEffect;
+                    effect.effect_id = 0;
+                    effect.effect_id = effectTypeNegative.effect_type_id;
+                    return effect;
+                });
+            }
+            const effectTypeMedical = effectTypes.find(effectType => effectType.code.toLowerCase() === ('medical').toLowerCase());
+            if (effectTypeMedical) {
+                entity.effects = (etlStrain.effects.positive || []).map((etlEffect) => {
+                    const effect = new StrainEffectEntity();
+                    effect.label = etlEffect;
+                    effect.effect_id = 0;
+                    effect.effect_id = effectTypeMedical.effect_type_id;
+                    return effect;
+                });
+            }
+            strainEntities.push(entity);
+        }
+        // else mark for error
     });
-    await database.query(db_config, 'select count(*) from strain;');
-    await database.query(db_config, 'select count(*) from strain_flavor;');
-    await database.query(db_config, 'select count(*) from strain_effect');
-}
-
-const insertEffects = async (strain: EtlStrain, strainEffectCollection: string[], effectType: StrainEffectTypeEntity) => {
-    await asyncForEach(strainEffectCollection, async (effect) => {
-        // console.log(strainEffectCollection);
-        // console.log(effectType);
-        await database.nonQuery(db_config, 
-            `insert into strain_effect (effect_type_id, strain_id, label) values (?, ?, ?);`,
-            [effectType.effect_type_id, strain.id, effect]
-        );
-    });
-}
-
-const insertStrain = async (strain: EtlStrain, race: StrainRaceEntity, effectTypes: StrainEffectTypeEntity[]) => {
-    try {
-        console.log(`INSERT STRAIN DATA - ${strain.name}`);
-        await database.nonQuery(db_config, 
-            `insert into strain (strain_id, name, race_id) values (?, ?, ?);`,
-            [strain.id, strain.name, race.race_id]
-        );
-        await asyncForEach(strain.flavors, async (flavor) => {
-            await database.nonQuery(db_config,  
-                `insert into strain_flavor (strain_id, label) values (?, ?);`,
-                [strain.id, flavor]
-            );
-        });
-        await insertEffects(strain, strain.effects.positive, effectTypes.find(effectType => effectType.code.toLowerCase() === ('positive').toLowerCase()));
-        await insertEffects(strain, strain.effects.negative, effectTypes.find(effectType => effectType.code.toLowerCase() === ('negative').toLowerCase()));
-        await insertEffects(strain, strain.effects.medical, effectTypes.find(effectType => effectType.code.toLowerCase() === ('medical').toLowerCase()));
-    }
-    catch (err) {
-        console.log('STRAIN INSERT ERROR');
-        console.error(err);
-    }
+    return strainEntities;
 }
