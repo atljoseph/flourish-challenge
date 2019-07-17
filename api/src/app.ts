@@ -6,6 +6,7 @@ import * as compression from 'compression';
 
 import { requestLoggerMiddleware, allowCorsMiddleware } from './middleware';
 import { applyRoutes } from './routes';
+import { errorHandler } from './error-handler';
 
 const app = express();
 
@@ -22,5 +23,8 @@ app.use(globalMiddleWare);
 
 // routes
 applyRoutes(app);
+
+// errors
+app.use(errorHandler);
 
 export default app;

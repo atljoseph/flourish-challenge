@@ -1,4 +1,5 @@
 
+// json model for strain object
 export interface EtlStrain {
     id: number;
     name: string;
@@ -7,6 +8,7 @@ export interface EtlStrain {
     effects: EtlStrainEffects;
 }
 
+// json model for effects object
 export interface EtlStrainEffects {
     positive: string[];
     negative: string[];

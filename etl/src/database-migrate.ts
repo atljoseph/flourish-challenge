@@ -11,12 +11,13 @@ const migration = { ...<DatabaseMigrationConfig>config.get(`migrations.${db_conn
 const db_config = <MysqlDatabaseConfig>config.get(`databases.${db_connection_name}`);
 const db = new MysqlDatabase(db_config);
 
+// trigger migration actions
 export const migrateDatabase = async () => {
     console.log('//////////////////////////////////');
     console.log('MIGRATE DATABASE');
     console.log(migration);
     console.log('//////////////////////////////////');
-    const files = getDatabaseMigration();
+    const files = getDatabaseMigrations();
     await asyncForEach(files, async (migration) => {
         console.log(`MIGRATION START ${migration.filePath}`);
         if (migration.sql) await db.nonQuery(migration.sql);
@@ -24,17 +25,20 @@ export const migrateDatabase = async () => {
     });
 };
 
+// config type
 interface DatabaseMigrationConfig {
     rootDirectory: string;
     files: string[];
 }
 
+// internally used
 interface DatabaseMigration {
     filePath: string;
     sql: string;
 }
 
-const getDatabaseMigration = (): DatabaseMigration[] => {
+// get migrations from file
+const getDatabaseMigrations = (): DatabaseMigration[] => {
     migration.rootDirectory = path.resolve(migration.rootDirectory || 'migrations');
     const migrationFiles: DatabaseMigration[] = [];
     // will fail here if file not found

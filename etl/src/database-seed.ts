@@ -1,19 +1,15 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as config from 'config';
 
-import { MysqlDatabase, MysqlDatabaseConfig, StrainEntity, StrainFlavorEntity, StrainEffectEntity } from 'lib';
+import { StrainEntity, StrainFlavorEntity, StrainEffectEntity } from 'lib';
 import { asyncForEach } from 'lib';
 import { EtlStrain, EtlStrainEffects } from './etl-strain';
-import { StrainRaceEntity, StrainEffectTypeEntity } from 'lib';
 import { StrainBusiness } from 'lib';
 
-const db_connection_name = 'strainsDb';
-const db_config = <MysqlDatabaseConfig>config.get(`databases.${db_connection_name}`);
-const db = new MysqlDatabase(db_config);
-const strainBusiness = new StrainBusiness(db_config);
+const strainBusiness = new StrainBusiness();
 
+// trigger database seeding actions
 export const seedDatabase = async () => {
     console.log('//////////////////////////////////');
     console.log('SEED DATABASE');
@@ -28,6 +24,7 @@ export const seedDatabase = async () => {
     // await insertTestData();
 };
 
+// get strains from json file
 const getEtlStrainData = async (): Promise<EtlStrain[]> => {
     console.log('READ SEED FILE');
     const filePath = path.resolve('seed-data', 'strains.json');
@@ -35,13 +32,7 @@ const getEtlStrainData = async (): Promise<EtlStrain[]> => {
     return etlStrains;
 }
 
-const insertTestData = async () => {
-    console.log('INSERT TEST DATA');
-    await db.insertQuery(`insert into testy (test_name) values ('derka');`);
-    await db.insertQuery(`insert into testy (test_name) values ('derk');`);
-    await db.query('select * from testy;');
-}
-
+// map etlStrain objects to strainEntity objects
 const mapEtlStrainsToStrainEntities = async (etlStrains: EtlStrain[]): Promise<StrainEntity[]> => {
     const strainEntities: StrainEntity[] = [];
     const races = await strainBusiness.getStrainRaces();

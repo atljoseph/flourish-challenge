@@ -36,12 +36,15 @@
 - strain business get all strain by id/s
 - strain business get all effect types
 - strain business get all races
+- use db transactions ? investigated and decided against for now (for time's sake)
+- strain route
+- base response and strain responses
+- base error and other errors
 - 
 
 # Todo
 
 - strain business search strains
-- use db transactions ? 
 - create data access / orm OR use controller to map entity to model? (expensive or cheap)
 - repurpose business to use orm ?
 - create routes / business for get

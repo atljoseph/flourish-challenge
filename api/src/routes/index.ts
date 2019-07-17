@@ -1,5 +1,6 @@
-import { testRoute } from './test.route';
+import { strainRoute } from './strain.route';
 
 export const applyRoutes = (app: any) => {
-    app.use('*/test', testRoute);
+    // app.use('*/test', testRoute);
+    app.use('*/strain', strainRoute);
 };

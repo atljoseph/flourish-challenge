@@ -1,0 +1,20 @@
+import { BaseError } from "./base-error";
+
+export class ValidationError extends Error implements BaseError {
+  error?: Error;
+  errorMessage: string;
+
+  constructor(message: string, error?: Error) {
+
+    // setup
+    super(message);
+    this.name = 'ValidationError';
+    this.message = message; // this isn't visible publicly for some reason (in json)
+    this.errorMessage = message;
+    this.error = error;
+
+    // 
+    //   do stuff with errors (type checking)
+
+  }
+}
