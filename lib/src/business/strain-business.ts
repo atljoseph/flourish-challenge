@@ -3,17 +3,19 @@ import * as config from 'config';
 
 import { MysqlDatabaseConfig, MysqlDatabase } from '../database/mysql-database';
 import { StrainFlavorEntity, StrainEffectTypeEntity, StrainEntity, StrainRaceEntity, StrainEffectEntity } from '../entity';
-import { asyncForEach } from '../util';
-import { BusinessError } from '../errors/business-error';
-import { DatabaseError } from '../errors';
-
-// this should ideally have another layer of abstraction between the database and business
-// in interest of brevity, i left them together here
-// should ideally use transactions, also ...
+import { asyncForEach } from '../util/async-foreach';
+import { BusinessError } from '../error/business-error';
+import { StrainRepository } from '../repository/strain-repository';
+import { strainMapper } from '../mapping';
+import { StrainDto, StrainFlavorDto, StrainRaceDto, StrainEffectTypeDto } from '../dto';
+import { StrainEtlModel } from '../model';
 
 export class StrainBusiness {
     // throwing error hear will bubble up to route or controller
-    private db: MysqlDatabase;
+    private _strainRepo: StrainRepository;
+    private _cacheIsInitialized: boolean = false;
+    private _cachedStrainRaces: StrainRaceEntity[] = [];
+    private _cachedStrainEffectTypes: StrainEffectTypeEntity[] = [];
     constructor() {
         let db_config: MysqlDatabaseConfig;
         try {
@@ -24,121 +26,86 @@ export class StrainBusiness {
         catch (err) {
             throw new BusinessError(`${this.constructor.name} - Error Invalid Database Configuration`, err);
         }
-        this.db = new MysqlDatabase(db_config);
+        // this will throw on its own:
+        this._strainRepo = new StrainRepository(db_config);
+
     }
-    async createStrain(entity: StrainEntity, isIdentityInsert?: boolean): Promise<number> {
-        console.log(`${this.constructor.name}.createStrain()`, entity);
-        // ideally, this would be a transaction !!
-        const strainValues: any[] = [];
-        if (isIdentityInsert) {
-            strainValues.push(entity.strain_id);
+    private async _loadIfNotLoaded() {
+        if (!this._cacheIsInitialized) {
+            this._cacheIsInitialized = true;
+            this._cachedStrainRaces = await this._strainRepo.getStrainRaces();
+            this._cachedStrainEffectTypes = await this._strainRepo.getStrainEffectTypes();
         }
-        strainValues.push(entity.name);
-        strainValues.push(entity.race_id);
-        const strainStatement = `insert into strain (${isIdentityInsert ? 'strain_id, ' : ''}name, race_id) values (${isIdentityInsert ? '?, ' : ''}?, ?);`;
-        const newStrainId = await this.db.insertQuery(strainStatement, strainValues);
-        console.log(`${this.constructor.name}.createStrain()`, newStrainId);
-        await asyncForEach(entity.flavors, async (flavor: StrainFlavorEntity) => {
-            await this.db.nonQuery(
-                `insert into strain_flavor (strain_id, label) values (?, ?);`,
-                [newStrainId, flavor.label]
-            );
-        });
-        const effectTypes = await this.getStrainEffectTypes();
-        const effectTypePositive = effectTypes.find(effectType => effectType.code.toLowerCase() === ('positive').toLowerCase());
-        if (effectTypePositive) await asyncForEach(entity.effects.filter(effect => effect.effect_type_id === effectTypePositive.effect_type_id), async (effect: StrainEffectEntity) => {
-            // console.log(strainEffectCollection);
-            // console.log(effectType);
-            await this.db.nonQuery(
-                `insert into strain_effect (effect_type_id, strain_id, label) values (?, ?, ?);`,
-                [effect.effect_type_id, newStrainId, effect.label]
-            );
-        });
-        const effectTypeNegative = effectTypes.find(effectType => effectType.code.toLowerCase() === ('negative').toLowerCase());
-        if (effectTypeNegative) await asyncForEach(entity.effects.filter(effect => effect.effect_type_id === effectTypeNegative.effect_type_id), async (effect: StrainEffectEntity) => {
-            // console.log(strainEffectCollection);
-            // console.log(effectType);
-            await this.db.nonQuery(
-                `insert into strain_effect (effect_type_id, strain_id, label) values (?, ?, ?);`,
-                [effect.effect_type_id, newStrainId, effect.label]
-            );
-        });
-        const effectTypeMedical = effectTypes.find(effectType => effectType.code.toLowerCase() === ('medical').toLowerCase());
-        if (effectTypeMedical) await asyncForEach(entity.effects.filter(effect => effect.effect_type_id === effectTypeMedical.effect_type_id), async (effect: StrainEffectEntity) => {
-            // console.log(strainEffectCollection);
-            // console.log(effectType);
-            await this.db.nonQuery(
-                `insert into strain_effect (effect_type_id, strain_id, label) values (?, ?, ?);`,
-                [effect.effect_type_id, newStrainId, effect.label]
-            );
-        });
+    }
+    async createStrainFromEtl(etl: StrainEtlModel, isIdentityInsert?: boolean): Promise<number> {
+        console.log(`${this.constructor.name}.createStrainFromEtl()`);
+        await this._loadIfNotLoaded();
+        const dto = strainMapper.mapEtlToStrainDto(etl, this._cachedStrainRaces, this._cachedStrainEffectTypes);
+        const newStrainId = await this.createStrainFromDto(dto, isIdentityInsert);
         return newStrainId;
     }
-    async updateStrain(strain: StrainEntity): Promise<number> {
-        console.log(`${this.constructor.name}.updateStrain()`, strain);
-        // not implemented yet
-        return 2;
+    async createStrainFromDto(dto: StrainDto, isIdentityInsert?: boolean): Promise<number> {
+        console.log(`${this.constructor.name}.createStrainFromDto()`, dto);
+        await this._loadIfNotLoaded();
+        const entity = strainMapper.mapToStrainEntity(dto);
+        const newStrainId = await this._strainRepo.createStrain(entity, isIdentityInsert);
+        return newStrainId;
     }
-    async deleteStrainById(strainId: number): Promise<void> {
+    async updateStrain(dto: StrainDto): Promise<number> {
+        console.log(`${this.constructor.name}.updateStrain()`, dto);
+        await this._loadIfNotLoaded();
+        const entity = strainMapper.mapToStrainEntity(dto);
+        const updatedStrainId = await this._strainRepo.updateStrain(entity);
+        return updatedStrainId;
+    }
+    async deleteStrainById(strainId: number): Promise<boolean> {
         console.log(`${this.constructor.name}.deleteStrainById()`, strainId);
-        await this.db.nonQuery(`delete from strain_flavor where strain_id = ?;`, [strainId]);
-        await this.db.nonQuery(`delete from strain_effect where strain_id = ?;`, [strainId]);
-        await this.db.nonQuery(`delete from strain where strain_id = ?;`, [strainId]);
+        await this._loadIfNotLoaded();
+        const entity = await this.getStrainDetailById(strainId);
+        return await this._strainRepo.deleteStrainById(entity.strain_id);
     }
-    async getAllStrains(): Promise<StrainEntity[]> {
+    async getAllStrainsLite(): Promise<StrainDto[]> {
         console.log(`${this.constructor.name}.getAllStrains()`);
-        const statement = `select * from strain;`;
-        const entities = <StrainEntity[]>await this.db.query(statement);
-        // console.log(entities);
-        return entities;
+        await this._loadIfNotLoaded();
+        const entities = await this._strainRepo.getAllStrains();
+        const dtos = entities.map(e => strainMapper.mapToStrainDto(e, this._cachedStrainRaces, this._cachedStrainEffectTypes, false));
+        return dtos;
     }
-    async getStrainById(strainId: number): Promise<StrainEntity> {
-        console.log(`${this.constructor.name}.getStrainById()`, strainId);
-        const statement = `select * from strain where strain_id = ?;`;
-        const values = [strainId];
-        const entities = <StrainEntity[]>await this.db.query(statement, values);
-        if (entities.length === 0) throw new Error(`${this.constructor.name}Error: strain_id ${strainId} not found.`);
-        // console.log(entities);
-        return entities[0];
+    async getStrainDetailById(strainId: number): Promise<StrainDto> {
+        console.log(`${this.constructor.name}.getStrainDetailById()`, strainId);
+        await this._loadIfNotLoaded();
+        const entity = await this._strainRepo.getStrainDetailById(strainId);
+        if (!entity) throw new BusinessError(`${this.constructor.name}Error: strain_id ${strainId} not found.`)
+        const dto = strainMapper.mapToStrainDto(entity, this._cachedStrainRaces, this._cachedStrainEffectTypes, true);
+        return dto;
     }
-    async getStrainsByIds(strainIds: number[]): Promise<StrainEntity[]> {
+    async getStrainsLiteByIds(strainIds: number[]): Promise<StrainDto[]> {
         console.log(`${this.constructor.name}.getStrainsByIds()`);
-        let statement = `select * from strain where strainId in (`;
-        let values: number[] = [];
-        strainIds.forEach((strainId, index) => {
-            statement += '?';
-            if (index !== strainIds.length - 1) statement += ',';
-            values.push(strainId);
-        });
-        statement = statement + ');';
-        const entities = <StrainEntity[]>await this.db.query(statement, values);
-        // console.log(entities);
-        return entities;
+        await this._loadIfNotLoaded();
+        const entities = await this._strainRepo.getStrainsByIds(strainIds);
+        const dtos = entities.map(e => strainMapper.mapToStrainDto(e, this._cachedStrainRaces, this._cachedStrainEffectTypes, false)); 
+        return dtos;
     }
-    async getStrainRaces(): Promise<StrainRaceEntity[]> {
-        console.log(`${this.constructor.name}.getStrainRaces()`);
-        const statement = `select * from strain_race;`;
-        const entities = <StrainRaceEntity[]>await this.db.query(statement);
-        // console.log(entities);
-        return entities;
-    }
-    async getStrainFlavors(): Promise<StrainFlavorEntity[]> {
-        console.log(`${this.constructor.name}.getStrainFlavors()`);
-        const statement = `select * from strain_flavor;`;
-        const entities = <StrainFlavorEntity[]>await this.db.query(statement);
-        // console.log(entities);
-        return entities;
-    }
-    async getStrainEffectTypes(): Promise<StrainEffectTypeEntity[]> {
-        console.log(`${this.constructor.name}.getStrainEffectTypes()`);
-        const statement = `select * from strain_effect_type;`;
-        const entities = <StrainEffectTypeEntity[]>await this.db.query(statement);
-        // console.log(entities);
-        return entities;
-    }
-    async searchStrains(searchContext: any): Promise<StrainEntity[]> {
+    async searchStrainsLite(searchContext: any): Promise<StrainDto[]> {
         console.log(`${this.constructor.name}.searchStrains()`, searchContext);
-        return [];
+        await this._loadIfNotLoaded();
+        const entities = await this._strainRepo.searchStrains(searchContext);
+        const dtos = entities.map(e => strainMapper.mapToStrainDto(e, this._cachedStrainRaces, this._cachedStrainEffectTypes, false)); 
+        return dtos;
+    }
+    async getStrainRaces(): Promise<StrainRaceDto[]> {
+        console.log(`${this.constructor.name}.getStrainRaces()`);
+        await this._loadIfNotLoaded();
+        const entities = this._cachedStrainRaces; //await this._strainRepo.getStrainRaces();
+        const dtos = entities; // pass through // no mapping
+        return dtos;
+    }
+    async getStrainEffectTypes(): Promise<StrainEffectTypeDto[]> {
+        console.log(`${this.constructor.name}.getStrainEffectTypes()`);
+        await this._loadIfNotLoaded();
+        const entities = await this._cachedStrainEffectTypes; //await this._strainRepo.getStrainEffectTypes();
+        const dtos = entities; // pass through // no mapping
+        return dtos;
     }
 }
 

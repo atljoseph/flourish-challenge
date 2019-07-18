@@ -5,7 +5,7 @@ import * as cors from 'cors';
 import * as compression from 'compression';  
 
 import { requestLoggerMiddleware, allowCorsMiddleware } from './middleware';
-import { applyRoutes } from './routes';
+import { applyRoutes } from './route';
 import { errorHandler } from './error-handler';
 
 const app = express();

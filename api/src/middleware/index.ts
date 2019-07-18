@@ -1,3 +1,3 @@
 export * from './allow-cors';
 export * from './request-logger';
-export * from './catch-errors';
+export * from './catch-async-errors';

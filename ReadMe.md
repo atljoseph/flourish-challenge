@@ -2,13 +2,29 @@
 
 - Navigate to project root - `cd [repo_root]`
 - Start MySQL Container - `npm run db`
-- Confirm DB Server & Database - `npm run dbTest`
+- Confirm DB Server & Database - `npm run dbList`
 - Build Shared Lib - `npm run lib`
 - Migrate & Seed MySQL - `npm run etl`
+- Confirm DB Data via MySQL - `npm run dbStrains`
 - Start API - `npm run api`
+- Create documentation - ``
 
+# Test Fiddlers / Postmans 
+(Note: DNE === Does Not Exist)
 
-# Done
+- Get All Strains - GET `http://localhost:8888/strain/all`
+- Get Strain Detail - GET `http://localhost:8888/strain/1`
+- Get Strain Detail When DNE - GET `http://localhost:8888/strain/detail/7`
+- Delete Strain - DELETE `http://localhost:8888/strain/detail/1`
+- Delete Strain When DNE - DELETE `http://localhost:8888/strain/detail/1`
+- Create Strain - ``
+- Update Strain - ``
+- Update Strain When DNE - ``
+- Search Strains By Single Property - ``
+- Search Strains By Many Properties - ``
+- Search Strains When No Results - ``
+
+# Tasks Done
 
 - set up docker db image / container
 - create api
@@ -40,19 +56,23 @@
 - strain route
 - base response and strain responses
 - base error and other errors
+- return 404 when no route is matched
+- data repository / access layer
+- mapping of strain dto to entity and back
+- lite and detail strain models
+- repurpose etl to insert with dto instead of entity
+- create route method / business for get all strains
+- create route method / business for get strain by id
+- return error when strain by id not found in db
+- return error when strain by id is invalid
 - 
 
-# Todo
+# Tasks Todo
 
 - strain business search strains
-- create data access / orm OR use controller to map entity to model? (expensive or cheap)
-- repurpose business to use orm ?
-- create routes / business for get
-- create routes / business for insert
-- create routes / business for update
-- add query param middleware?
-- add params to get for searching / update get business
-
-- tests project ?
+- create route method for create
+- create route method / business / repo for update
+- create route method / business / repo for search
+- Postman or the like
 - nodemon? / pm2? for multithreading
-- in-code documentation comments
+- in-code documentation comments - jsdoc

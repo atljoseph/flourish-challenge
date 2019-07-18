@@ -7,6 +7,7 @@ export class StrainEffectDto {
     effect_type: StrainEffectTypeDto;
 }
 
+// this is where the entity and dto representations differ
 export class StrainEffectsDto {
     positive: StrainEffectDto[];
     negative: StrainEffectDto[];

@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "lib": "cd lib && npm run build",
-    "etl": "npm run db && npm run lib && cd etl && npm run start",
-    "api": "npm run lib && cd api && npm run start",
+    "etl": "npm run db && npm run lib && cd etl && rm -rf node_modules && npm i && npm run start",
+    "api": "npm run lib && cd api && rm -rf node_modules && npm i && npm run start",
     "db": "cd db && npm run stop && npm run start",
-    "dbTest": "cd db && npm run dbList"
+    "dbList": "cd db && npm run dbList",
+    "dbStrains": "cd db && npm run dbStrains"
   },
   "author": "",
   "license": "ISC",

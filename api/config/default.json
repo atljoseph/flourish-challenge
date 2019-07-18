@@ -8,7 +8,8 @@
             "user": "root",
             "password": "password",
             "database": "test",
-            "connectionLimit": 1
+            "connectionLimit": 1,
+            "multipleStatements": false
         }
     },
     "migrations": {

@@ -6,7 +6,8 @@
   "scripts": {
     "start": "sh ./docker-build-run.sh",
     "stop": "sh ./docker-kill.sh",
-    "dbList": "sh ./db-list.sh"
+    "dbList": "sh ./db-list.sh",
+    "dbStrains": "sh ./db-strains.sh"
   },
   "author": "",
   "license": "ISC"

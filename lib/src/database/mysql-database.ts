@@ -2,7 +2,7 @@
 import * as mysql from 'mysql';
 import * as util from 'util';
 import * as config from 'config';
-import { DatabaseError } from '../errors/database-error';
+import { DatabaseError } from '../error/database-error';
 
 export type MysqlDatabaseConfig = mysql.PoolConfig;
 
@@ -19,7 +19,7 @@ export class MysqlDatabase {
                 password: db_config.password,
                 database: db_config.database,
                 connectionLimit: db_config.connectionLimit || 1,
-                multipleStatements: true
+                multipleStatements: db_config.multipleStatements
             });
             // tried this and did not work well
             // this._connectionPool.query = util.promisify(this._connectionPool.query)
