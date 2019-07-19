@@ -3,13 +3,10 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as config from 'config';
 
-import { MysqlDatabase, MysqlDatabaseConfig } from 'lib';
+import { database } from 'lib';
 import { asyncForEach } from 'lib';
 
-const db_connection_name = 'strainsDb';
-const migration = { ...<DatabaseMigrationConfig>config.get(`migrations.${db_connection_name}`) };
-const db_config = <MysqlDatabaseConfig>config.get(`databases.${db_connection_name}`);
-const db = new MysqlDatabase(db_config);
+const migration = { ...<DatabaseMigrationConfig>config.get(`migrations.strainsDb`) };
 
 // trigger migration actions
 export const migrateDatabase = async () => {
@@ -18,9 +15,10 @@ export const migrateDatabase = async () => {
     console.log(migration);
     console.log('//////////////////////////////////');
     const files = getDatabaseMigrations();
+    const pool = await database.strain.pool();
     await asyncForEach(files, async (migration) => {
         console.log(`MIGRATION START ${migration.filePath}`);
-        if (migration.sql) await db.nonQuery(migration.sql);
+        if (migration.sql) await database.strain.nonQuery(pool, migration.sql);
         console.log(`MIGRATION DONE ${migration.filePath}`);
     });
 };

@@ -2,12 +2,9 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
-import { StrainEntity, StrainFlavorEntity, StrainEffectEntity, StrainEffectsDto } from 'lib';
 import { asyncForEach } from 'lib';
 import { StrainEtlModel } from 'lib';
-import { StrainDto, StrainEffectDto, StrainRaceDto } from 'lib';
 import { StrainBusiness } from 'lib';
-import { strainMapper } from 'lib';
 
 const strainBusiness = new StrainBusiness();
 
@@ -20,7 +17,7 @@ export const seedDatabase = async () => {
     
     await asyncForEach(etlStrains, async (etlStrains) => {
         console.log(`ETL CREATE STRAIN - ${etlStrains.name}`, etlStrains);
-        await strainBusiness.createStrainFromEtl(etlStrains, true);
+        await strainBusiness.createStrainDetailFromEtl(etlStrains, true);
     });
     // await insertTestData();
 };

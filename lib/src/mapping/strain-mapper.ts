@@ -42,9 +42,10 @@ class StrainMapper {
         dto.race_id = entity.race_id;
         dto.race = <StrainRaceDto>races.find((race) => race.race_id === entity.race_id);
         if (mapDetail) {
-            dto.flavors = entity.flavors.map((entityFlavor) => <StrainFlavorDto>entityFlavor);
+            dto.flavors = (entity.flavors || []).map((entityFlavor) => <StrainFlavorDto>entityFlavor);
+            dto.effects = new StrainEffectsDto();
             effectTypes.forEach(effectType => {
-                dto[effectType.code] = entity.effects
+                dto.effects[effectType.code] = (entity.effects || [])
                     .filter(entityEffect => entityEffect.effect_type_id === effectType.effect_type_id)
                     .map(entityEffect => <StrainEffectDto>entityEffect);
             });
@@ -53,11 +54,12 @@ class StrainMapper {
     }
     // map dto to entity
     mapToStrainEntity(dto: StrainDto): StrainEntity {
+        console.log(dto);
         const entity = new StrainEntity();
         entity.name = dto.name;
         entity.strain_id = dto.strain_id;
         entity.race_id = dto.race ? dto.race.race_id : dto.race_id;
-        entity.flavors = dto.flavors.map((dtoFlavor) => <StrainFlavorEntity>dtoFlavor);
+        entity.flavors = (dto.flavors || []).map((dtoFlavor) => <StrainFlavorEntity>dtoFlavor);
         entity.effects = (dto.effects.positive || [])
             .concat(dto.effects.negative || [])
             .concat(dto.effects.medical || []);

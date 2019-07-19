@@ -7,7 +7,7 @@
             "host": "localhost",
             "user": "root",
             "password": "password",
-            "database": "test",
+            "database": "strain",
             "connectionLimit": 1,
             "multipleStatements": true
         }

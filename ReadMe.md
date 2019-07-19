@@ -1,28 +1,32 @@
 # Flourish Challenge
 
+# Project folders
+
+- Includes `db` folder
+- Includes `lib` folder
+- Includes `etl` folder
+- Includes `api` folder
+
+# Dependencies
+
+- [Docker Installed && Daemon is Started(I have version Version 18.06.1-ce-mac73)]
+- [NodeJs Installed w/ NPM (LTS or greater)]
+- `npm install -g typescript`
+- `npm install -g pm2`
+- [Postman Installed for Testing]
+
+# Run
+
 - Navigate to project root - `cd [repo_root]`
-- Start MySQL Container - `npm run db`
+- Start MySQL Container - `npm run dbStart` (Stop with `npm run dbStop`)
 - Confirm DB Server & Database - `npm run dbList`
 - Build Shared Lib - `npm run lib`
 - Migrate & Seed MySQL - `npm run etl`
 - Confirm DB Data via MySQL - `npm run dbStrains`
-- Start API - `npm run api`
+- Start API - `npm run apiStart` (Stop with `npm run apiStop`)
+- Test w/ Postman Collection - Find the file `Flourish-Challenge.postman_collection.json` 
 - Create documentation - ``
 
-# Test Fiddlers / Postmans 
-(Note: DNE === Does Not Exist)
-
-- Get All Strains - GET `http://localhost:8888/strain/all`
-- Get Strain Detail - GET `http://localhost:8888/strain/1`
-- Get Strain Detail When DNE - GET `http://localhost:8888/strain/detail/7`
-- Delete Strain - DELETE `http://localhost:8888/strain/detail/1`
-- Delete Strain When DNE - DELETE `http://localhost:8888/strain/detail/1`
-- Create Strain - ``
-- Update Strain - ``
-- Update Strain When DNE - ``
-- Search Strains By Single Property - ``
-- Search Strains By Many Properties - ``
-- Search Strains When No Results - ``
 
 # Tasks Done
 
@@ -52,7 +56,6 @@
 - strain business get all strain by id/s
 - strain business get all effect types
 - strain business get all races
-- use db transactions ? investigated and decided against for now (for time's sake)
 - strain route
 - base response and strain responses
 - base error and other errors
@@ -65,14 +68,21 @@
 - create route method / business for get strain by id
 - return error when strain by id not found in db
 - return error when strain by id is invalid
+- build db "context" with db connector pattern
+- use db transactions and connection pool in repository
+- nodemon? / pm2? for multithreading
+- mysql bulk inserts
+- Postman collection started
+- route method for create
+- unique index on strain name
+- route method / business / repo / postman for search
+- route method / business / repo for update detail
 - 
 
 # Tasks Todo
 
-- strain business search strains
-- create route method for create
-- create route method / business / repo for update
-- create route method / business / repo for search
-- Postman or the like
-- nodemon? / pm2? for multithreading
 - in-code documentation comments - jsdoc
+- create / update validations
+
+- use redis for caching static data like effect types / races
+- move migrations to lib

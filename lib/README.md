@@ -1,12 +1,9 @@
-# Typescript Express API
+# Shared Lib for Flourish Challenge ETL and API
 
 ## Dependencies
 
 ```
 sudo npm install -g typescript
-sudo npm install -g pm2
 npm install
 npm start
-npm stop
 ```
-

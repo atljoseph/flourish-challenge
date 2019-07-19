@@ -1,12 +1,9 @@
-# Typescript Express API
+# ETL Strain Import Script
 
 ## Dependencies
 
 ```
 sudo npm install -g typescript
-sudo npm install -g pm2
 npm install
 npm start
-npm stop
 ```
-

@@ -22,7 +22,7 @@ export const errorHandler = async (err, req, res, next) => {
 
     if (res.dto && res.dto instanceof BaseResponseDto) {
         // hide any database errors for now from output over the wire
-        err.error = err instanceof DatabaseError ? ['See Console Output'] : err.error;
+        err.error = err instanceof DatabaseError ? [] : err.error;
         res.dto.statusCode = err !instanceof ValidationError ? 500 : 400;
         res.dto.errors.push(err);
         res.status(res.dto.statusCode).send(res.dto);
