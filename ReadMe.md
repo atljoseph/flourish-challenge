@@ -37,13 +37,11 @@
 - query db from api
 - db server setup sql
 - environment configuration via json file
-- run db migration on startup
-- run setup sql on initial run
 - script to kick off migration & data etl process
 - use shared typescript lib
 - improve project structure / scripting
 - create test route and request logging middleware
-- create db storage schema & run
+- create db storage schema 
 - delegate migration list to config and allow multiple migration files
 - download / install mysql workbench
 - create etl data insert
