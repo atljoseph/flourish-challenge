@@ -3,7 +3,7 @@ module.exports = {
     name: 'API',
     script: 'dist/index.js',
     // args: 'one two',
-    instances: 1,
+    instances: 3,
     autorestart: true,
     watch: false,
     // max_memory_restart: '1G',
