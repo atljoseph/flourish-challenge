@@ -9,7 +9,7 @@
 
 # Dependencies
 
-- [Docker Installed && Daemon is Started(I have version Version 18.06.1-ce-mac73)]
+- [Docker Installed && Daemon is Started (I have Version 18.06.1-ce-mac73)]
 - [NodeJs Installed w/ NPM (LTS or greater)]
 - `sudo npm install -g typescript`
 - `sudo npm install -g pm2`
