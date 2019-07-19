@@ -9,6 +9,6 @@ export const applyRoutes = (app: any) => {
     app.use('*', (req, res) => {
         const statusCode = 404;
         console.log(`${statusCode} - Route Match Not Found`);
-        res.status(statusCode).send();
+        res.status(statusCode).send('404 Not Found');
     });
 };
