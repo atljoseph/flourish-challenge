@@ -15,11 +15,10 @@ export const seedDatabase = async () => {
     console.log('//////////////////////////////////');
     const etlStrains = await getEtlStrainData();
     
-    await asyncForEach(etlStrains, async (etlStrains) => {
-        console.log(`ETL CREATE STRAIN - ${etlStrains.name}`, etlStrains);
-        await strainBusiness.createStrainDetailFromEtl(etlStrains, true);
+    await asyncForEach(etlStrains, async (etlStrain) => {
+        console.log(`ETL CREATE STRAIN - ${etlStrain.name}`, etlStrain);
+        await strainBusiness.createStrainDetailFromEtl(etlStrain, true);
     });
-    // await insertTestData();
 };
 
 // get strains from json file
