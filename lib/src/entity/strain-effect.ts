@@ -1,4 +1,8 @@
 
+/**
+ * @class StrainEffectTypeEntity
+ * Representation of the relational strain effect type entity.
+ */
 export class StrainEffectTypeEntity {
     // db props
     effect_type_id: number;
@@ -6,6 +10,9 @@ export class StrainEffectTypeEntity {
     label: string;
 }
 
+/**
+ * Representation of the relational strain effect entity.
+ */
 export class StrainEffectEntity {
     // db props
     effect_id: number;

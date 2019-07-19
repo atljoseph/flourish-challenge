@@ -113,3 +113,6 @@ $RECYCLE.BIN/
 # Others
 # lib/
 data/
+
+# Type Doc - Generate Documentation
+docs

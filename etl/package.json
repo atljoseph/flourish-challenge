@@ -5,14 +5,17 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "start": "npm run build && node dist/"
+    "start": "npm run build && node dist/",
+    "doc": "typedoc --out docs ./src"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "config": "^3.2.0",
     "fs-extra": "^8.1.0",
-    "lib": "file:../lib"
+    "lib": "file:../lib",
+    "typedoc": "^0.14.2",
+    "typedoc-plugin-external-module-name": "^2.1.0"
   },
   "devDependencies": {
     "@types/config": "0.0.34",

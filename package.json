@@ -6,12 +6,15 @@
   "scripts": {
     "lib": "cd lib && npm i && npm run build",
     "etl": "npm run lib && cd etl && rm -rf node_modules && npm i && npm run start",
+    "api": "npm run apiStart",
     "apiStart": "npm run lib && cd api && rm -rf node_modules && npm i && npm run start",
     "apiStop": "cd api && npm run stop",
+    "db": "npm run dbStart",
     "dbStart": "cd db && npm run start",
     "dbStop": "cd db && npm run stop",
     "dbList": "cd db && npm run dbList",
-    "dbStrains": "cd db && npm run dbStrains"
+    "dbStrains": "cd db && npm run dbStrains",
+    "doc": "cd lib && npm run doc && cd ../etl && npm run doc && cd ../api && npm run doc"
   },
   "author": "",
   "license": "ISC",

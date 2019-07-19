@@ -1,5 +1,8 @@
 import { BaseError } from "./base-error";
 
+/**
+ * Validation Errors are thrown when a validation is violated. These cause the API to return a 400.
+ */
 export class ValidationError extends Error implements BaseError {
   error?: Error;
   errorMessage: string;

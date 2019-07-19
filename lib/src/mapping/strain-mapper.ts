@@ -2,8 +2,13 @@ import { StrainDto, StrainFlavorDto, StrainRaceDto, StrainEffectDto, StrainEffec
 import { StrainFlavorEntity, StrainEntity, StrainRaceEntity, StrainEffectTypeEntity } from "../entity";
 import { StrainEtlModel } from "../model/strain-etl.model";
 
+/**
+ * Maps strain data from the Entity layer to the Dto layer and back.
+ */
 class StrainMapper {
-    // map etlStrain objects to strainDto objects
+    /**
+     * Map [StrainEtlModel] to [StrainDto].
+     */
     mapEtlToStrainDto(etl: StrainEtlModel, races: StrainRaceEntity[], effectTypes: StrainEffectTypeEntity[]): StrainDto {
         console.log(effectTypes);
         const race = <StrainRaceDto>races.find((race) => race.code.toLowerCase() === etl.race.toLowerCase());
@@ -34,7 +39,9 @@ class StrainMapper {
         });
         return dto;
     }
-    // map entity to dto
+    /**
+     * Map [StrainEntity] to [StrainDto].
+     */
     mapToStrainDto(entity: StrainEntity, races: StrainRaceEntity[], effectTypes: StrainEffectTypeEntity[], mapDetail: boolean = false): StrainDto {
         const dto = new StrainDto();
         dto.name = entity.name;
@@ -52,7 +59,9 @@ class StrainMapper {
         }
         return dto;
     }
-    // map dto to entity
+    /**
+     * Map [StrainDto] to [StrainEntity].
+     */
     mapToStrainEntity(dto: StrainDto): StrainEntity {
         console.log(dto);
         const entity = new StrainEntity();

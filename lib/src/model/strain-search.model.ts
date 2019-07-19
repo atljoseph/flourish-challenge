@@ -1,3 +1,7 @@
+
+/**
+ * Internal model used to communicate the strain search context.
+ */
 export class StrainSearchModel {
     searchName: string;
     searchRace: string;

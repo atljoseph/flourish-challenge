@@ -9,7 +9,8 @@
   ],
   "scripts": {
     "prepare": "npm run build",
-    "build": "rm -rf dist && tsc"
+    "build": "rm -rf dist && tsc",
+    "doc": "typedoc --module file --out docs ./src"
   },
   "author": "",
   "license": "ISC",

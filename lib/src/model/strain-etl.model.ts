@@ -1,5 +1,7 @@
 
-// json model for strain object
+/**
+ * Internal model used to load strain data from json file.
+ */
 export interface StrainEtlModel {
     id: number;
     name: string;
@@ -8,7 +10,9 @@ export interface StrainEtlModel {
     effects: StrainEffectsEtlModel;
 }
 
-// json model for effects object
+/**
+ * Internal model used to load strain data from json file.
+ */
 export interface StrainEffectsEtlModel {
     positive: string[];
     negative: string[];

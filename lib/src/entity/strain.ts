@@ -2,6 +2,9 @@ import { StrainRaceEntity } from "./strain-race";
 import { StrainFlavorEntity } from "./strain-flavor";
 import { StrainEffectEntity } from "./strain-effect";
 
+/**
+ * Representation of the relational strain entity.
+ */
 export class StrainEntity {
     // db props
     strain_id: number;

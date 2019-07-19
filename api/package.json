@@ -6,7 +6,8 @@
   "scripts": {
     "build": "rm -rf dist && tsc",
     "start": "npm run stop && npm run build && pm2 start ecosystem.config.js && pm2 flush && pm2 logs",
-    "stop": "pm2 kill"
+    "stop": "pm2 kill",
+    "doc": "typedoc --out docs ./src"
   },
   "author": "",
   "license": "ISC",
@@ -20,6 +21,8 @@
     "helmet": "^3.18.0",
     "lib": "file:../lib",
     "moment": "^2.24.0",
+    "typedoc": "^0.14.2",
+    "typedoc-plugin-external-module-name": "^2.1.0",
     "winston": "^3.2.1"
   },
   "devDependencies": {

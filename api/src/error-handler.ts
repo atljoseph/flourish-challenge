@@ -1,5 +1,5 @@
 
-import { DatabaseError, BusinessError, ValidationError, BaseError } from 'lib';
+import { DatabaseError, ValidationError, BaseError } from 'lib';
 import { BaseResponseDto } from './dto/response/base-response.dto';
 
 export class ApiError extends Error implements BaseError {

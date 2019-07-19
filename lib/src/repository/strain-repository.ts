@@ -8,16 +8,17 @@ import { DatabaseError } from '../error';
 import { database } from '../database';
 import { StrainSearchModel } from '../model/strain-search.model';
 
-// this should ideally have another layer of abstraction between the database and business
-// in interest of brevity, i left them together here
-// should ideally use transactions, also ...
-
+/**
+ * The StrainRespository is where raw objects are read, updated, and inserted. This is where the SQL Statements live.
+ * This class should be instantiated by a Business class.
+ */
 export class StrainRepository {
-    // throwing error hear will bubble up to route or controller
+    /**
+     * Create Strain Detail from an entity object.
+     */
     async createStrainDetail(entity: StrainEntity, isIdentityInsert?: boolean): Promise<number> {
         return new Promise<number>((async (resolve, reject) => {
             console.log(`${this.constructor.name}.createStrainDetail()`, entity);
-            // ideally, this would be a transaction !!
             const values1: any[] = [];
             if (isIdentityInsert) {
                 values1.push(entity.strain_id);
@@ -59,6 +60,10 @@ export class StrainRepository {
             });
         }));
     }
+    /**
+     * Update Strain Detail from an entity object.
+     * For Flavors and Effects, this will delete and replace any records that changed.
+     */
     async updateStrainDetail(entity: StrainEntity): Promise<number> {
         return new Promise<number>((async (resolve, reject) => {
             console.log(`${this.constructor.name}.updateStrainDetail()`, entity);
@@ -162,6 +167,9 @@ export class StrainRepository {
             });
         }));
     }
+    /**
+     * Delete a Strain (and all of its Flavors and Effects) by Strain Id.
+     */
     async deleteStrainById(strainId: number): Promise<void> {
         return new Promise<void>((async (resolve, reject) => {
             console.log(`${this.constructor.name}.deleteStrainById()`, strainId);
@@ -189,6 +197,10 @@ export class StrainRepository {
             });
         }));
     }
+    /**
+     * Get a list of all strains.
+     * Note: Does not return detail records.
+     */
     async getStrainLitesAll(): Promise<StrainEntity[]> {
         console.log(`${this.constructor.name}.getStrainLitesAll()`);
         const pool = await database.strain.pool();
@@ -197,6 +209,9 @@ export class StrainRepository {
         // console.log(entities);
         return entities;
     }
+    /**
+     * Get Strain Detail record by Id. Includes all Flavors and Effects.
+     */
     async getStrainDetailById(strainId: number): Promise<StrainEntity | undefined> {
         console.log(`${this.constructor.name}.getStrainDetailById()`, strainId);
         const pool = await database.strain.pool();
@@ -218,6 +233,10 @@ export class StrainRepository {
 
         return entity;
     }
+    /**
+     * Used in Search. Get a List of light strain records from a list of Strain Ids.
+     * Note: Does not return detail records.
+     */
     async getStrainLitesByIds(strainIds: number[]): Promise<StrainEntity[]> {
         console.log(`${this.constructor.name}.getStrainLitesByIds()`);
         const pool = await database.strain.pool();
@@ -234,6 +253,9 @@ export class StrainRepository {
         // console.log(entities);
         return entities;
     }
+    /**
+     * Get a list of all Strain Races.
+     */
     async getStrainRaces(): Promise<StrainRaceEntity[]> {
         console.log(`${this.constructor.name}.getStrainRaces()`);
         const pool = await database.strain.pool();
@@ -242,6 +264,9 @@ export class StrainRepository {
         // console.log(entities);
         return entities;
     }
+    /**
+     * Get a list of all Strain Effect Types.
+     */
     async getStrainEffectTypes(): Promise<StrainEffectTypeEntity[]> {
         console.log(`${this.constructor.name}.getStrainEffectTypes()`);
         const pool = await database.strain.pool();
@@ -250,6 +275,9 @@ export class StrainRepository {
         // console.log(entities);
         return entities;
     }
+    /**
+     * Get a list of distinct Strain Ids which matches a specific [StrainSearchModel].
+     */
     async searchStrainIds(searchModel: StrainSearchModel): Promise<number[]> {
         console.log(`${this.constructor.name}.getStrainLitesAll()`);
         const pool = await database.strain.pool();

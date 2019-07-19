@@ -11,8 +11,9 @@
 
 - [Docker Installed && Daemon is Started(I have version Version 18.06.1-ce-mac73)]
 - [NodeJs Installed w/ NPM (LTS or greater)]
-- `npm install -g typescript`
-- `npm install -g pm2`
+- `sudo npm install -g typescript`
+- `sudo npm install -g pm2`
+- `sudo npm install -g typedoc`
 - [Postman Installed for Testing]
 
 # Run
@@ -25,7 +26,7 @@
 - Confirm DB Data via MySQL - `npm run dbStrains`
 - Start API - `npm run apiStart` (Stop with `npm run apiStop`)
 - Test w/ Postman Collection - Find the file `Flourish-Challenge.postman_collection.json` 
-- Create documentation - ``
+- Create documentation - `npm run doc`
 
 
 # Tasks Done
@@ -77,12 +78,11 @@
 - unique index on strain name
 - route method / business / repo / postman for search
 - route method / business / repo for update detail
-- 
+- typedoc for lib
 
 # Tasks Todo
 
-- in-code documentation comments - jsdoc
-- create / update validations
-
+- typedoc for etl
+- typedoc for api
 - use redis for caching static data like effect types / races
 - move migrations to lib
