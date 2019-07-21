@@ -3,7 +3,7 @@ import { StrainFlavorEntity, StrainEffectTypeEntity, StrainEntity, StrainRaceEnt
 import { StrainRepository } from '../repository/strain-repository';
 import { strainMapper } from '../mapping';
 import { StrainDto, StrainFlavorDto, StrainRaceDto, StrainEffectTypeDto } from '../dto';
-import { StrainEtlModel, StrainSearchModel} from '../model';
+import { StrainEtlModel, StrainSearchModel } from '../model';
 import { ValidationError } from '../error/validation-error';
 
 /**
@@ -18,7 +18,7 @@ export class StrainBusiness {
     private _cachedStrainRaces: StrainRaceEntity[] = [];
     private _cachedStrainEffectTypes: StrainEffectTypeEntity[] = [];
 
-    constructor() {        
+    constructor() {
         // this will throw on its own error if applicable
         this._strainRepo = new StrainRepository();
     }
@@ -38,7 +38,7 @@ export class StrainBusiness {
      * Use [StrainEtlModel] to write a Strain to the database.
      */
     async createStrainDetailFromEtl(etl: StrainEtlModel, isIdentityInsert?: boolean): Promise<number> {
-        console.log(`${this.constructor.name}.createStrainDetailFromEtl()`, etl);
+        console.log(`${this.constructor.name}.createStrainDetailFromEtl()`, etl.name);
         await this._loadIfNotLoaded();
         const dto = strainMapper.mapEtlToStrainDto(etl, this._cachedStrainRaces, this._cachedStrainEffectTypes);
         const newStrainId = await this.createStrainDetailFromDto(dto, isIdentityInsert);
@@ -48,7 +48,7 @@ export class StrainBusiness {
      * Use [StrainDto] to write a Strain to the database.
      */
     async createStrainDetailFromDto(dto: StrainDto, isIdentityInsert?: boolean): Promise<number> {
-        console.log(`${this.constructor.name}.createStrainDetailFromDto()`, dto);
+        console.log(`${this.constructor.name}.createStrainDetailFromDto()`, dto.name);
         await this._loadIfNotLoaded();
         const entity = strainMapper.mapToStrainEntity(dto);
         const newStrainId = await this._strainRepo.createStrainDetail(entity, isIdentityInsert);
@@ -58,10 +58,13 @@ export class StrainBusiness {
      * Use [StrainDto] to update a Strain Detail in the database.
      */
     async updateStrainDetail(dto: StrainDto): Promise<number> {
-        console.log(`${this.constructor.name}.updateStrainDetail()`, dto);
+        console.log(`${this.constructor.name}.updateStrainDetail()`, dto.strain_id);
         await this._loadIfNotLoaded();
-        const entity = strainMapper.mapToStrainEntity(dto);
-        const updatedStrainId = await this._strainRepo.updateStrainDetail(entity);
+        const incomingEntity = strainMapper.mapToStrainEntity(dto);
+        const existingEntity = await this._strainRepo.getStrainDetailById(incomingEntity.strain_id);
+        console.log(existingEntity);
+        if (!existingEntity) throw new ValidationError(`${this.constructor.name}Error: strain_id ${dto.strain_id} not found.`)
+        const updatedStrainId = await this._strainRepo.updateStrainDetail(incomingEntity, existingEntity);
         return updatedStrainId;
     }
     /**
@@ -70,8 +73,10 @@ export class StrainBusiness {
     async deleteStrainById(strainId: number): Promise<boolean> {
         console.log(`${this.constructor.name}.deleteStrainById()`, strainId);
         await this._loadIfNotLoaded();
-        const entity = await this.getStrainDetailById(strainId);
-        await this._strainRepo.deleteStrainById(entity.strain_id);
+        const existingEntity = await this._strainRepo.getStrainLiteById(strainId);
+        console.log(existingEntity);
+        if (!existingEntity) throw new ValidationError(`${this.constructor.name}Error: strain_id ${strainId} not found.`)
+        await this._strainRepo.deleteStrainById(existingEntity.strain_id);
         return true;
     }
     /**
@@ -94,6 +99,17 @@ export class StrainBusiness {
         const entity = await this._strainRepo.getStrainDetailById(strainId);
         if (!entity) throw new ValidationError(`${this.constructor.name}Error: strain_id ${strainId} not found.`)
         const dto = strainMapper.mapToStrainDto(entity, this._cachedStrainRaces, this._cachedStrainEffectTypes, true);
+        return dto;
+    }
+    /**
+     * Get Strain Light record by Id.
+     */
+    async getStrainLiteById(strainId: number): Promise<StrainDto> {
+        console.log(`${this.constructor.name}.getStrainLiteById()`, strainId);
+        await this._loadIfNotLoaded();
+        const entity = await this._strainRepo.getStrainLiteById(strainId);
+        if (!entity) throw new ValidationError(`${this.constructor.name}Error: strain_id ${strainId} not found.`)
+        const dto = strainMapper.mapToStrainDto(entity, this._cachedStrainRaces, this._cachedStrainEffectTypes, false);
         return dto;
     }
     /**
@@ -120,7 +136,7 @@ export class StrainBusiness {
         const strainIds = await this._strainRepo.searchStrainIds(searchModel);
         const strainLiteEntities = await this._strainRepo.getStrainLitesByIds(strainIds);
 
-        const dtos = strainLiteEntities.map(e => strainMapper.mapToStrainDto(e, this._cachedStrainRaces, this._cachedStrainEffectTypes, false)); 
+        const dtos = strainLiteEntities.map(e => strainMapper.mapToStrainDto(e, this._cachedStrainRaces, this._cachedStrainEffectTypes, false));
 
         return dtos;
     }

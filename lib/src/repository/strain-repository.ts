@@ -18,99 +18,84 @@ export class StrainRepository {
      */
     async createStrainDetail(entity: StrainEntity, isIdentityInsert?: boolean): Promise<number> {
         return new Promise<number>((async (resolve, reject) => {
-            console.log(`${this.constructor.name}.createStrainDetail()`, entity);
-            const values1: any[] = [];
-            if (isIdentityInsert) {
-                values1.push(entity.strain_id);
-            }
-            values1.push(entity.name);
-            values1.push(entity.race_id);
+            console.log(`${this.constructor.name}.createStrainDetail()`, entity.name);
 
-            let newStrainId = 0;
             const transaction = await database.strain.transaction();
-
-            const statement1 = `insert into strain (${isIdentityInsert ? 'strain_id, ' : ''}name, race_id) values (${isIdentityInsert ? '?, ' : ''}?, ?);`;
-            await transaction.query(statement1, values1, async (err1, rows1, fields1) => {
-                if (err1) {
-                    await database.strain.rollback(transaction);
-                    reject(new DatabaseError(`${this.constructor.name}Error Inserting Strain`, err1));
+            try {
+                const statement1 = `insert into strain (${isIdentityInsert ? 'strain_id, ' : ''}name, race_id) values (${isIdentityInsert ? '?, ' : ''}?, ?);`;
+                const values1: any[] = [];
+                if (isIdentityInsert) {
+                    values1.push(entity.strain_id);
                 }
-                newStrainId = rows1.insertId;
-                const statement2 = entity.flavors.length > 0 ? `insert into strain_flavor (strain_id, label) values ?;` : 'select 1';
-                const values2 = [entity.flavors.map((flavor) => [newStrainId, flavor.label])];
-                // console.log(`${this.constructor.name} - New Strain ID: ${newStrainId}`, statement2, values2);
-                await transaction.query(statement2, values2, async (err2, rows2, fields2) => {
-                    if (err2 && err2! instanceof DatabaseError) {
-                        console.error(err2);
-                        await database.strain.rollback(transaction);
-                        reject(new DatabaseError(`${this.constructor.name}Error Inserting Strain Flavors(s)`, err2));
-                    }
-                    const statement3 = entity.effects.length > 0 ? `insert into strain_effect (effect_type_id, strain_id, label) values ?;` : 'select 1';
+                values1.push(entity.name);
+                values1.push(entity.race_id);
+                const newStrainId = await database.strain.insertQuery(transaction, statement1, values1);
+
+                if (entity.flavors && entity.flavors.length > 0) {
+                    const statement2 = `insert into strain_flavor (strain_id, label) values ?;`;
+                    const values2 = [entity.flavors.map((flavor) => [newStrainId, flavor.label])];
+                    await database.strain.insertQuery(transaction, statement2, values2);
+                }
+
+                if (entity.effects && entity.effects.length > 0) {
+                    const statement3 = `insert into strain_effect (effect_type_id, strain_id, label) values ?;`;
                     const values3 = [entity.effects.map((effect) => [effect.effect_type_id, newStrainId, effect.label])];
-                    await transaction.query(statement3, values3, async (err3, rows3, fields3) => {
-                        if (err3) {
-                            console.error(err3);
-                            await database.strain.rollback(transaction);
-                            reject(new DatabaseError(`${this.constructor.name}Error Inserting Strain Effect(s)`, err3));
-                        }
-                        await database.strain.commit(transaction);
-                        resolve(newStrainId);
-                    });
-                });
-            });
+                    await database.strain.insertQuery(transaction, statement3, values3);
+                }
+
+                await database.strain.commit(transaction);
+                resolve(newStrainId);
+            }
+            catch (err) {
+                await database.strain.rollback(transaction);
+                console.error(err);
+                reject(new DatabaseError(`${this.constructor.name}Error Inserting Strain Detail via transaction`, err));
+            }
         }));
     }
     /**
      * Update Strain Detail from an entity object.
      * For Flavors and Effects, this will delete and replace any records that changed.
      */
-    async updateStrainDetail(entity: StrainEntity): Promise<number> {
+    async updateStrainDetail(incomingEntity: StrainEntity, existingEntity: StrainEntity): Promise<number> {
         return new Promise<number>((async (resolve, reject) => {
-            console.log(`${this.constructor.name}.updateStrainDetail()`, entity);
+            console.log(`${this.constructor.name}.updateStrainDetail()`, incomingEntity, existingEntity);
 
-            const existingStrain = await this.getStrainDetailById(entity.strain_id);
-
-            const flavorsToDelete = ((existingStrain && existingStrain.flavors) || [])
+            const flavorsToDelete = ((existingEntity && existingEntity.flavors) || [])
                 .filter((existing) => {
-                    const exists = (entity.flavors || []).findIndex((incoming) => existing.label === incoming.label) > -1;
+                    const exists = (incomingEntity.flavors || []).findIndex((incoming) => existing.label === incoming.label) > -1;
                     return !exists;
                 });
-            const flavorsToInsert = (entity.flavors || [])
+            const flavorsToInsert = (incomingEntity.flavors || [])
                 .filter((incoming) => {
-                    const exists = ((existingStrain && existingStrain.flavors) || []).findIndex((existing) => incoming.label === existing.label) > -1;
+                    const exists = ((existingEntity && existingEntity.flavors) || []).findIndex((existing) => incoming.label === existing.label) > -1;
                     return !exists;
                 });
 
-            const effectsToDelete = ((existingStrain && existingStrain.effects) || [])
+            const effectsToDelete = ((existingEntity && existingEntity.effects) || [])
                 .filter((existing) => {
-                    const exists = (entity.effects || []).findIndex((incoming) => existing.label === incoming.label) > -1;
+                    const exists = (incomingEntity.effects || []).findIndex((incoming) => existing.label === incoming.label) > -1;
                     return !exists;
                 });
-            const effectsToInsert = (entity.effects || [])
+            const effectsToInsert = (incomingEntity.effects || [])
                 .filter((incoming) => {
-                    const exists = ((existingStrain && existingStrain.effects) || []).findIndex((existing) => incoming.label === existing.label) > -1;
+                    const exists = ((existingEntity && existingEntity.effects) || []).findIndex((existing) => incoming.label === existing.label) > -1;
                     return !exists;
                 });
 
             const transaction = await database.strain.transaction();
-            const statement1 = `update strain set name = ?, race_id = ? where strain_id = ?;`
-            const values1 = [entity.name, entity.race_id, entity.strain_id];
-            await transaction.query(statement1, values1, async (err1, rows1, fields1) => {
-                if (err1) {
-                    console.error(err1);
-                    await database.strain.rollback(transaction);
-                    reject(new DatabaseError(`${this.constructor.name}Error Updating Strain`, err1));
+            try {
+                const statement1 = `update strain set name = ?, race_id = ? where strain_id = ?;`
+                const values1 = [incomingEntity.name, incomingEntity.race_id, incomingEntity.strain_id];
+                await database.strain.nonQuery(transaction, statement1, values1);
+
+                if (flavorsToInsert.length > 0) {
+                    const statement2 = `insert into strain_flavor (strain_id, label) values ?;`;
+                    const values2 = [flavorsToInsert.map((flavor) => [incomingEntity.strain_id, flavor.label])];
+                    await database.strain.insertQuery(transaction, statement2, values2);
                 }
 
-                const statement2 = flavorsToInsert.length > 0 ? `insert into strain_flavor (strain_id, label) values ?;` : 'select 1';
-                const values2 = [flavorsToInsert.map((flavor) => [entity.strain_id, flavor.label])];
-                await transaction.query(statement2, values2, async (err2, rows2, fields2) => {
-                    if (err2) {
-                        console.error(err2);
-                        await database.strain.rollback(transaction);
-                        reject(new DatabaseError(`${this.constructor.name}Error Inserting Strain Flavors(s)`, err2));
-                    }
-
+                if (flavorsToDelete.length > 0) {
                     let statement3 = `delete from strain_flavor where flavor_id in (`;
                     let values3: number[] = [];
                     flavorsToDelete.forEach((flavor, index) => {
@@ -123,48 +108,39 @@ export class StrainRepository {
                         values3.push(0);
                     }
                     statement3 = statement3 + ');';
-                    await transaction.query(statement3, values3, async (err3, rows3, fields3) => {
-                        if (err3) {
-                            console.error(err3);
-                            await database.strain.rollback(transaction);
-                            reject(new DatabaseError(`${this.constructor.name}Error Deleting Strain Flavor(s)`, err3));
-                        }
+                    await database.strain.nonQuery(transaction, statement3, values3);
+                }
 
-                        const statement4 = effectsToInsert.length > 0 ? `insert into strain_effect (effect_type_id, strain_id, label) values ?;` : 'select 1';
-                        const values4 = [effectsToInsert.map((effect) => [effect.effect_type_id, entity.strain_id, effect.label])];
-                        await transaction.query(statement4, values4, async (err4, rows4, fields4) => {
-                            if (err4) {
-                                console.error(err4);
-                                await database.strain.rollback(transaction);
-                                reject(new DatabaseError(`${this.constructor.name}Error Inserting Strain Effects(s)`, err4));
-                            }
+                if (effectsToInsert.length > 0) {
+                    const statement4 = effectsToInsert.length > 0 ? `insert into strain_effect (effect_type_id, strain_id, label) values ?;` : 'select 1';
+                    const values4 = [effectsToInsert.map((effect) => [effect.effect_type_id, incomingEntity.strain_id, effect.label])];
+                    await database.strain.insertQuery(transaction, statement4, values4);
+                }
 
-                            let statement5 = `delete from strain_effect where effect_id in (`;
-                            let values5: number[] = [];
-                            effectsToDelete.forEach((effect, index) => {
-                                statement5 += '?';
-                                if (index !== effectsToDelete.length - 1) statement5 += ',';
-                                values5.push(effect.effect_id);
-                            });
-                            if (values5.length === 0) {
-                                statement5 += '?';
-                                values5.push(0);
-                            }
-                            statement5 = statement5 + ');';
-                            await transaction.query(statement5, values5, async (err5, rows5, fields5) => {
-                                if (err5) {
-                                    console.error(err5);
-                                    await database.strain.rollback(transaction);
-                                    reject(new DatabaseError(`${this.constructor.name}Error Deleting Strain Effects(s)`, err5));
-                                }
-
-                                await database.strain.commit(transaction);
-                                resolve(entity.strain_id);
-                            });
-                        });
+                if (effectsToDelete.length > 0) {
+                    let statement5 = `delete from strain_effect where effect_id in (`;
+                    let values5: number[] = [];
+                    effectsToDelete.forEach((effect, index) => {
+                        statement5 += '?';
+                        if (index !== effectsToDelete.length - 1) statement5 += ',';
+                        values5.push(effect.effect_id);
                     });
-                });
-            });
+                    if (values5.length === 0) {
+                        statement5 += '?';
+                        values5.push(0);
+                    }
+                    statement5 = statement5 + ');';
+                    await database.strain.nonQuery(transaction, statement5, values5);
+                }
+
+                await database.strain.commit(transaction);
+                resolve(incomingEntity.strain_id);
+            }
+            catch (err) {
+                await database.strain.rollback(transaction);
+                console.error(err);
+                reject(new DatabaseError(`${this.constructor.name}Error Updating Strain Detail via transaction`, err));
+            }
         }));
     }
     /**
@@ -173,28 +149,29 @@ export class StrainRepository {
     async deleteStrainById(strainId: number): Promise<void> {
         return new Promise<void>((async (resolve, reject) => {
             console.log(`${this.constructor.name}.deleteStrainById()`, strainId);
+
             const transaction = await database.strain.transaction();
-            await transaction.query(`delete from strain_flavor where strain_id = ?;`, [strainId], async (err1, rows1, fields1) => {
-                if (err1) {
-                    console.error(err1);
-                    await database.strain.rollback(transaction);
-                    reject(new DatabaseError(`${this.constructor.name}Error Deleting Strain Flavor(s)`, err1));
-                }
-                await transaction.query(`delete from strain_effect where strain_id = ?;`, [strainId], async (err2, rows2, fields2) => {
-                    if (err2) {
-                        console.error(err2);
-                        await database.strain.rollback(transaction);
-                        reject(new DatabaseError(`${this.constructor.name}Error Deleting Strain Effect(s)`, err2));
-                    }
-                    await transaction.query(`delete from strain where strain_id = ?;`, [strainId], async (err3, rows3, fields3) => {
-                        if (err3) {
-                            await database.strain.rollback(transaction);
-                            reject(new DatabaseError(`${this.constructor.name}Error Deleting Strain By Id`, err3));
-                        }
-                        resolve(await database.strain.commit(transaction));
-                    });
-                });
-            });
+            try {
+                const statement1 = `delete from strain_flavor where strain_id = ?;`;
+                const values1 = [strainId];
+                await database.strain.nonQuery(transaction, statement1, values1);
+
+                const statement2 = `delete from strain_effect where strain_id = ?;`;
+                const values2 = [strainId];
+                await database.strain.nonQuery(transaction, statement2, values2);
+
+                const statement3 = `delete from strain where strain_id = ?;`;
+                const values3 = [strainId];
+                await database.strain.nonQuery(transaction, statement3, values3);
+
+                await database.strain.commit(transaction);
+                resolve();
+            }
+            catch (err) {
+                await database.strain.rollback(transaction);
+                console.error(err);
+                reject(new DatabaseError(`${this.constructor.name}Error Deleting Strain Detail via transaction`, err));
+            }
         }));
     }
     /**
@@ -231,6 +208,24 @@ export class StrainRepository {
         const values3 = [strainId];
         entity.effects = <StrainEffectEntity[]>await database.strain.query(pool, statement3, values3);
 
+        return entity;
+    }
+     /**
+     * Used in Update, and possibly other things. Get a light strain record from a strainId.
+     * Note: Does not return a detail record.
+     */
+    async getStrainLiteById(strainId: number): Promise<StrainEntity | undefined> {
+        console.log(`${this.constructor.name}.getStrainLiteById()`);
+        const pool = await database.strain.pool();
+
+        let statement = `select * from strain where strain_id = ?;`;
+        const values = [strainId];
+        const entities = <StrainEntity[]>await database.strain.query(pool, statement, values);
+
+        if (entities.length === 0) return undefined;
+        const entity = entities[0];
+
+        // console.log(entities);
         return entity;
     }
     /**
