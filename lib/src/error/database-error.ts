@@ -1,7 +1,7 @@
 import { BaseError } from "./base-error";
 
 /**
- * Database Errors are thrown when a SQL statement throws an error. These cause the API to return a 400.
+ * Database Errors are thrown when a SQL statement throws an error. These cause the API to return a 500.
  */
 export class DatabaseError extends Error implements BaseError {
   error?: Error;
