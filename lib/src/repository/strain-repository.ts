@@ -112,7 +112,7 @@ export class StrainRepository {
                 }
 
                 if (effectsToInsert.length > 0) {
-                    const statement4 = effectsToInsert.length > 0 ? `insert into strain_effect (effect_type_id, strain_id, label) values ?;` : 'select 1';
+                    const statement4 = `insert into strain_effect (effect_type_id, strain_id, label) values ?;`;
                     const values4 = [effectsToInsert.map((effect) => [effect.effect_type_id, incomingEntity.strain_id, effect.label])];
                     await database.strain.insertQuery(transaction, statement4, values4);
                 }
