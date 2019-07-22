@@ -17,48 +17,45 @@ export class StrainRepository {
      * Create Strain Detail from an entity object.
      */
     async createStrainDetail(entity: StrainEntity, isIdentityInsert?: boolean): Promise<number> {
-        return new Promise<number>((async (resolve, reject) => {
-            console.log(`${this.constructor.name}.createStrainDetail()`, entity.name);
+        console.log(`${this.constructor.name}.createStrainDetail()`, entity.name);
 
-            const transaction = await database.strain.transaction();
-            try {
-                const statement1 = `insert into strain (${isIdentityInsert ? 'strain_id, ' : ''}name, race_id) values (${isIdentityInsert ? '?, ' : ''}?, ?);`;
-                const values1: any[] = [];
-                if (isIdentityInsert) {
-                    values1.push(entity.strain_id);
-                }
-                values1.push(entity.name);
-                values1.push(entity.race_id);
-                const newStrainId = await database.strain.insertQuery(transaction, statement1, values1);
-
-                if (entity.flavors && entity.flavors.length > 0) {
-                    const statement2 = `insert into strain_flavor (strain_id, label) values ?;`;
-                    const values2 = [entity.flavors.map((flavor) => [newStrainId, flavor.label])];
-                    await database.strain.insertQuery(transaction, statement2, values2);
-                }
-
-                if (entity.effects && entity.effects.length > 0) {
-                    const statement3 = `insert into strain_effect (effect_type_id, strain_id, label) values ?;`;
-                    const values3 = [entity.effects.map((effect) => [effect.effect_type_id, newStrainId, effect.label])];
-                    await database.strain.insertQuery(transaction, statement3, values3);
-                }
-
-                await database.strain.commit(transaction);
-                resolve(newStrainId);
+        const transaction = await database.strain.transaction();
+        try {
+            const statement1 = `insert into strain (${isIdentityInsert ? 'strain_id, ' : ''}name, race_id) values (${isIdentityInsert ? '?, ' : ''}?, ?);`;
+            const values1: any[] = [];
+            if (isIdentityInsert) {
+                values1.push(entity.strain_id);
             }
-            catch (err) {
-                await database.strain.rollback(transaction);
-                console.error(err);
-                reject(new DatabaseError(`${this.constructor.name}Error Inserting Strain Detail via transaction`, err));
+            values1.push(entity.name);
+            values1.push(entity.race_id);
+            const newStrainId = await database.strain.insertQuery(transaction, statement1, values1);
+
+            if (entity.flavors && entity.flavors.length > 0) {
+                const statement2 = `insert into strain_flavor (strain_id, label) values ?;`;
+                const values2 = [entity.flavors.map((flavor) => [newStrainId, flavor.label])];
+                await database.strain.insertQuery(transaction, statement2, values2);
             }
-        }));
+
+            if (entity.effects && entity.effects.length > 0) {
+                const statement3 = `insert into strain_effect (effect_type_id, strain_id, label) values ?;`;
+                const values3 = [entity.effects.map((effect) => [effect.effect_type_id, newStrainId, effect.label])];
+                await database.strain.insertQuery(transaction, statement3, values3);
+            }
+
+            await database.strain.commit(transaction);
+            return newStrainId;
+        }
+        catch (err) {
+            await database.strain.rollback(transaction);
+            console.error(err);
+            throw new DatabaseError(`${this.constructor.name}Error Inserting Strain Detail via transaction`, err);
+        }
     }
     /**
      * Update Strain Detail from an entity object.
      * For Flavors and Effects, this will delete and replace any records that changed.
      */
     async updateStrainDetail(incomingEntity: StrainEntity, existingEntity: StrainEntity): Promise<number> {
-        return new Promise<number>((async (resolve, reject) => {
             console.log(`${this.constructor.name}.updateStrainDetail()`, incomingEntity, existingEntity);
 
             const flavorsToDelete = ((existingEntity && existingEntity.flavors) || [])
@@ -134,20 +131,18 @@ export class StrainRepository {
                 }
 
                 await database.strain.commit(transaction);
-                resolve(incomingEntity.strain_id);
+                return incomingEntity.strain_id;
             }
             catch (err) {
                 await database.strain.rollback(transaction);
                 console.error(err);
-                reject(new DatabaseError(`${this.constructor.name}Error Updating Strain Detail via transaction`, err));
+                throw new DatabaseError(`${this.constructor.name}Error Updating Strain Detail via transaction`, err);
             }
-        }));
     }
     /**
      * Delete a Strain (and all of its Flavors and Effects) by Strain Id.
      */
     async deleteStrainById(strainId: number): Promise<void> {
-        return new Promise<void>((async (resolve, reject) => {
             console.log(`${this.constructor.name}.deleteStrainById()`, strainId);
 
             const transaction = await database.strain.transaction();
@@ -165,14 +160,13 @@ export class StrainRepository {
                 await database.strain.nonQuery(transaction, statement3, values3);
 
                 await database.strain.commit(transaction);
-                resolve();
+                return;
             }
             catch (err) {
                 await database.strain.rollback(transaction);
                 console.error(err);
-                reject(new DatabaseError(`${this.constructor.name}Error Deleting Strain Detail via transaction`, err));
+                throw new DatabaseError(`${this.constructor.name}Error Deleting Strain Detail via transaction`, err);
             }
-        }));
     }
     /**
      * Get a list of all strains.
@@ -210,10 +204,10 @@ export class StrainRepository {
 
         return entity;
     }
-     /**
-     * Used in Update, and possibly other things. Get a light strain record from a strainId.
-     * Note: Does not return a detail record.
-     */
+    /**
+    * Used in Update, and possibly other things. Get a light strain record from a strainId.
+    * Note: Does not return a detail record.
+    */
     async getStrainLiteById(strainId: number): Promise<StrainEntity | undefined> {
         console.log(`${this.constructor.name}.getStrainLiteById()`);
         const pool = await database.strain.pool();
